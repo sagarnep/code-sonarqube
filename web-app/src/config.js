@@ -1,6 +1,2 @@
-
-const config = {
-  apiUrl: process.env.REACT_APP_API_URL?.replace(/\/$/, '') || 'http://localhost:3001'
-}
-
-export default config
+export const port = parseInt(process.env.PORT || "3000", 10);
+export const host = process.env.HOST || "localhost";
