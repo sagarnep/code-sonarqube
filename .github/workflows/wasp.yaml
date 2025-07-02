@@ -16,7 +16,7 @@ jobs:
     - name: SonarQube Scan
       uses: sonarsource/sonarqube-scan-action@master
       env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_TOKEN: squ_8c69f10d7ed9682c6179daa8795017ecc2b6f50b
         SONAR_HOST_URL: http://127.0.0.1:80
       with:
         # Project key must match your SonarQube project
