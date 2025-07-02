@@ -22,3 +22,4 @@ jobs:
         # Project key must match your SonarQube project
         args: >
           -Dsonar.projectName="myproject"
+          -Dsonar.projectKey="myproject"
