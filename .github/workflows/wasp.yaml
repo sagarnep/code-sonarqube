@@ -12,17 +12,12 @@ jobs:
       with:
         fetch-depth: 0  # Required for full Git history
 
-    - name: Set up JDK
-      uses: actions/setup-java@v3
-      with:
-        java-version: 17
-        distribution: temurin
-
+   
     - name: SonarQube Scan
       uses: sonarsource/sonarqube-scan-action@master
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: http://localhost:80
+        SONAR_HOST_URL: http://127.0.0.1:80
       with:
         # Project key must match your SonarQube project
         args: >
