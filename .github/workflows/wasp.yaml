@@ -1,16 +1,29 @@
-name: SonarQube Code Analysis
-
-on: [push]
+name: SonarQube Analysis
+on: [push, pull_request]
 
 jobs:
   sonarqube:
-    runs-on: self-hosted  # required to reach local SonarQube
-
+    # Use self-hosted runner to access local SonarQube
+    runs-on: self-hosted
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Required for full Git history
 
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4.2.1
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: 17
+        distribution: temurin
+
+    - name: SonarQube Scan
+      uses: sonarsource/sonarqube-scan-action@master
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: http://localhost:80
+      with:
+        # Project key must match your SonarQube project
+        args: >
+          -Dsonar.projectName="myproject"
