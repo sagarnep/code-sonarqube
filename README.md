@@ -1,65 +1,66 @@
-# Damn-Vulnerable-Source-Code
+# Sonar SAST demo in JavaScript
 
-There are a lots of instances when as security researchers we may need to analyse source code without a working application front end to understand the functionalities. This open source project aims to provide a platform for beginners to start reviewing source code manually without the UI.
+This is a simple JavaScript project that is used to demonstrate [Sonar's deeper SAST](https://www.sonarsource.com/solutions/security/) capabilities.
 
-The aim of the project is to develop intentionally vulnerable source code in various languages.
+- [Intro](#intro)
+- [SAST](#sast)
+  - [Deeper SAST](#deeper-sast)
+- [Running the application](#running-the-application)
+- [License](#license)
 
-At present we are trying to build common vulnerabilities based on OWASP Top 10.
+## Intro
 
-Contributors are always welcome to the project. We require more people to be a part of the same.
+The application is an Express server that has two endpoints, both of which are used to dynamically return a file from the file system. The code is intentionally simple and vulnerable to a [directory traversal attack](https://owasp.org/www-community/attacks/Path_Traversal). _Do not use code like this in your own application_. The goal is to demonstrate how Sonar can detect the vulnerability.
 
-The first project code will be posted on the GitHub repo (Python+Flask) for a start with the readme containing an application structure and a vulnerability list so that the contributors can start building application in various languages.
+## SAST
 
-Those who are interested you can make application in whichever language you are comfortable with including the vulnerabilities listed and maintaining the structure of the application and create a submission to the GitHub.
+Static Application Security Testing (SAST) is a method of testing the security of an application by examining its source code for vulnerabilities. SAST is one of the most efficient ways to find security flaws early in the development process, and Sonar's SAST capabilities are built into the commercial versions of [SonarQube](https://www.sonarsource.com/products/sonarqube/) and [SonarCloud](https://www.sonarsource.com/products/sonarcloud/) platforms.
 
-Keep an eye on this repo for the updates.
+In this example, the route `/image` is vulnerable to a directory traversal attack because it does not properly sanitize the filename that is passed through the query, which is then passed to the `stat` and `createReadStream` functions from Node's built-in [`fs` module](https://nodejs.org/api/fs.html).
 
+You can see [how SonarCloud detects the vulnerability](https://sonarcloud.io/project/issues?resolved=false&types=VULNERABILITY&id=philnash_deeper-sast-javascript&open=AYnYBrsEF5NvR2klfg_o), tracking the data flow from the incoming request, from the `server.js` file to the `src/image-fs.js` file and through the `getImage` function.
 
-Update (19-Aug-2019)
----------------------
+![A screenshot of SonarCloud's analysis of this project, showing the locations of the data flow through the code and how the result is vulnerable](./images/sast.png)
 
-This section provides the pages and the purpose of the pages in the application. Eventhough we mentioned the purpose of these pages, these information are ONLY for the development purpose of the application only. The contributors can omit the submission of UI related files, images etc. Remember the objective of the project, you ONLY have visibility to Source Code. 
+### Deeper SAST
 
-Naming Conventions and the page details: 
------------------------------------------
+In order to better understand applications, deeper SAST enables Sonar's SAST engine to trace data flow in and out of third-party, open-source libraries. You can [read more about Sonar's deeper SAST capabilities here](https://www.sonarsource.com/solutions/security/).
 
-Please keep all the pages the same name across the platforms so that the user of the project can have a comparison of the each platform and understand how the application works easily. 
+In this example, the route `/image-extra` is almost exactly the same as the `/image` route, with the exception of using the [`fs-extra` library](https://www.npmjs.com/package/fs-extra). `fs-extra` is a drop-in replacement for the built-in `fs` module with some additional capabilities. In this case, we are using the same methods, just importing them from `fs-extra` instead. Without knowledge of the dependency and how it interacts with the file system, a SAST tool would overlook the vulnerability in `./src/image-fs-extra.js`, but Sonar's deeper SAST knows about the library and can spot the vulnerability.
 
-index.html is the landing Page of the application , where a SignIn form and Signup Link will be available. 
+You can see [that SonarCloud detects this vulnerability too](https://sonarcloud.io/project/issues?resolved=false&types=VULNERABILITY&id=philnash_deeper-sast-javascript&open=AYnYBrsEF5NvR2klfg_o), tracking the data flow from the incoming request, from the `server.js` file to the `src/image-fs-extra.js` file, through the `getImage` function and into the function from the third-party, open-source library `fs-extra`.
 
-signup.html will be used to create user in the application. 
+![A screenshot of SonarCloud's analysis of this project, showing the locations of the data flow through the code and how the result is vulnerable even though it uses a function from a third-party, open-source library](./images/deeper-sast.png)
 
-homepage.html page will be used as a landing page for a valid loggged in user where additional functionalities will be present.
+## Running the application
 
-Mainly form to feed in PII data like credit card info / personal information. This is not a user profile page.
+You can run the application if you want to see the vulnerability in action.
 
-sl.html is secret page for the admin to login which can be used to run some of his shady stuff. 
+First, clone the repository from GitHub and change into the new directory:
 
+```bash
+git clone https://github.com/philnash/deeper-sast-javascript.git
+cd deeper-sast-javascript
+```
 
-cust_error.html - this page will act as a place to dump all the errors and exceptions.
+Install the dependencies:
 
-style.css - this file is the CSS file which is used. 
+```bash
+npm install
+```
 
-app.py is the python file where the application logics are written and most of the interesting stuff happens here. 
+Then start the server:
 
-# Vulnerabilites List: 
+```bash
+npm start
+```
 
-1. Hardcoded secrets like username and password
-2. Internal IP disclosure
-3. PII Data being transffered via URL
-4. Insecure usgage of Random function
-5. Reflected Cross Site Scripting
-6. Stored Cross Site Scripting
-7. Authorization bypass issues like forced browsing
-8. Isecure direct object reference
-9. Authentication bypass using SQL Injection
-10. Sensitive Information disclosed via comments
-11. Version Disclosures via Code and comments
-12. Technical information revealed via stacktrace / error message
+You can then make requests to the server on either of the endpoints: `/image` or `/image-extra`.
 
-and more to come ...
+For example, if you make a request to [http://localhost:3000/image?filename=sonar.png](http://localhost:3000/image?filename=sonar.png) or [http://localhost:3000/image-extra?filename=sonar.png](http://localhost:3000/image-extra?filename=sonar.png) you will see a Sonar logo.
 
-Update : 04-05-2020
---------------------
+If you make a request to [http://localhost:3000/image?filename=../package.json](http://localhost:3000/image?filename=../package.json) or [http://localhost:3000/image-extra?filename=../package.json](http://localhost:3000/image-extra?filename=../package.json) you will see the contents of the `package.json` file. This is the vulnerability. And you can keep adding `../` to the query to traverse deeper into the file system.
 
-At present this is a dead project due to work and other important stuff going on in life, Once I sort those out I will start working on this one. Till then stay safe and beat the crap out of COVID - 19.
+## License
+
+This project is licensed under the [MIT License](LICENSE).
